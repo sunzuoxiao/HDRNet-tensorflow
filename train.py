@@ -40,22 +40,19 @@ class SR2HDR(object):
         if ckpt:
             ckpt_files = ckpt.all_model_checkpoint_paths
             num_ckpt = len(ckpt_files)
-        print(checkpoints_dir)
 
         if ckpt and ckpt.model_checkpoint_path and num_ckpt >= 1:
-            print('的点点滴滴多多多多多多多多多多多多多多多多多多多多多多多多多多多多多多 ')
-            print(ckpt_files[-1])
+
             saver.restore(sess, ckpt_files[-1])
-            print("restore model from ", ckpt_files[-1])
             return True
-        print("can not restore model from ", checkpoints_dir, 'may a new model')
+
         return False
 
 
     def make_model(self):
 
-        self.hd_img = tf.placeholder(tf.float32, shape=[batch_size, imput_size, imput_size, 3], name='sdrY')
-        self.sd_img = tf.placeholder(tf.float32, shape=[batch_size, imput_size, imput_size, 3], name='sdrU')
+        self.hd_img = tf.placeholder(tf.float32, shape=[None, None, None, 3], name='hd_img')
+        self.sd_img = tf.placeholder(tf.float32, shape=[None, None, None, 3], name='sd_img')
 
         config_gen = config_cus.HyperPara()
         self.inference_net = Inference_net(config=config_gen.Model.Generator)
@@ -136,11 +133,10 @@ class SR2HDR(object):
 
 if __name__ == '__main__':
 
-    tfpath = '/media/szx/新加卷1/HDR_NET/MODEL'
+    tfpath = 'MODEL'
 
     save_path = os.path.join(tfpath, 'NODEL')
-
-    tfrecord_name1 = '/media/szx/新加卷1/guide_denoise/waifu2x_1_60w_doc_contrast_cat_18065_10000_3744_3800_224x224_2x_video_fast_crf_35_wt_sharpen_doc_gauss_var0.00005.tfrecord'
+    tfrecord_name1 = '/data.tfrecord'
 
     sdr2hdr=SR2HDR(save_path, training=True, scale=1)
     sdr2hdr.train(tfrecord_name1, num_step=240000//16, batch_size=batch_size, num_epochs=30, img_s=256)

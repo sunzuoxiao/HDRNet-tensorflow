@@ -63,24 +63,29 @@ class Inference_net(keras.Model):
         '''feature_collection'''
         for layer_op in self.ds_layer:
             tensor = layer_op(tensor)
-        print('tensor', tensor)
-        feature_collection = self.SA(tensor)
 
-        print('feature_clooention',feature_collection)
+        # attention 层去掉
+        # feature_collection = self.SA(tensor)
 
+        feature_collection = tensor
 
         '''global'''
         tensor = self.global_conv_2(self.global_conv_1(feature_collection))
-        shape = tensor.get_shape().as_list()
-        # shape = tf.shape(tensor)
-        tensor = tf.reshape(tensor, (shape[0], shape[1] * shape[2] * shape[3]))
+        # shape = tensor.get_shape().as_list()
+        # tensor = tf.reshape(tensor, (shape[0], shape[1] * shape[2] * shape[3]))
+        # reshape 使用flatten层替换
+        tensor = tf.layers.flatten(tensor,name='global_flatten')
         tensor = self.global_fc3(self.global_fc2(self.global_fc1(tensor)))
         global_feature = tensor
 
         '''local'''
         local_feature = self.local_conv_2(self.local_conv_1(feature_collection))
         '''fusion'''
-        fusion_global = tf.reshape(global_feature, (shape[0], 1, 1, 8 * self.cm * self.gd))
+        # fusion_global = tf.reshape(global_feature, (shape[0], 1, 1, 8 * self.cm * self.gd))
+        # fusiong 的reshape 替换成 flatten 然后在expand 宽和高的维度
+        fusion_global = tf.expand_dims(global_feature, axis=1)
+        fusion_global = tf.expand_dims(fusion_global, axis=2)
+
         fusion_feature = tf.nn.relu(local_feature + fusion_global)
         grid = self.fusion_conv(fusion_feature)
         with tf.name_scope('unroll_grid'):
@@ -90,12 +95,11 @@ class Inference_net(keras.Model):
                 tf.split(grid, 4, axis=4), axis=5)
 
         '''guideMap'''
-        print('input:',inputs)
+
         guide_map = self.guideMap(inputs)
-        print('grid',grid)
-        print('guide_map', guide_map)
-        print('inputs', inputs)
         output = apply_bg(grid, guide_map, inputs)
         return output
+
+
 
 
