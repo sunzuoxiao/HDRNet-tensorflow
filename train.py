@@ -12,6 +12,12 @@ from os.path import join
 imput_size = 512
 batch_size = 8
 
+# you can used google_model hdrnet
+# USE_MODEL.inference()
+from google_model import model_google
+
+USE_MODE = model_google.HDRNetCurves
+
 class SR2HDR(object):
 
     def __init__(self, save_path, training=True, scale=1):
